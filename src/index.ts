@@ -2,9 +2,11 @@
 import './style.css';
 // three.js
 import * as THREE from 'three';
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 // create the scene
 const scene = new THREE.Scene();
+scene.background = new THREE.Color('white')
 
 // create the camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -16,54 +18,86 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 
 // add canvas to dom
 document.body.appendChild(renderer.domElement);
-
-// add axis to the scene
-const axis = new THREE.AxesHelper(10);
-
-scene.add(axis);
+const controls = new OrbitControls(camera, renderer.domElement);
 
 // add lights
-const light = new THREE.DirectionalLight(0xffffff, 1.0);
-
+const light = new THREE.DirectionalLight(0xffffff, 0.75)
 light.position.set(100, 100, 100);
-
+light.lookAt(scene.position)
 scene.add(light);
 
-const light2 = new THREE.DirectionalLight(0xffffff, 1.0);
+const ambient = new THREE.AmbientLight(0xffffff, 0.75)
+scene.add(ambient)
 
-light2.position.set(-100, 100, -100);
+const wireframe = false;
 
-scene.add(light2);
+const postWidth = 5.5
+const postHeight = 48
+const postXDistance = 64.25
+const postZDistance = 36
+const postMaterial = new THREE.MeshStandardMaterial({color: new THREE.Color('rgb(148,106,82)'), wireframe: wireframe})
 
-const material = new THREE.MeshBasicMaterial({
-  color: 0xaaaaaa,
-  wireframe: true,
-});
+const posts: THREE.Mesh[] = []
+for (let i = 0; i < 4; i++) {
+  posts.push(new THREE.Mesh(new THREE.BoxGeometry(postWidth, postHeight, postWidth), postMaterial));
+  scene.add(posts[i]);
+  posts[i].position.x = (i & 1) ? postXDistance + postWidth / 2 : postWidth / 2
+  posts[i].position.y = postHeight / 2
+  posts[i].position.z = (i >= 2) ? postZDistance + postWidth / 2 : postWidth / 2
+}
 
-// create a box and add it to the scene
-const box = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material);
+const woodMaterial = new THREE.MeshStandardMaterial({color: new THREE.Color('rgb(202,164,114)'), wireframe: wireframe})
+const supportHeight = 5.5
+const sinkOpeningDepth = 22.375
+const sinkOpeningWidth = 31.375
+const twoByFourDepth = 1.5
+const twoByFourHeight = 3.5
+const counterDepth = 2 * twoByFourDepth + sinkOpeningDepth
+const supportDepth = postZDistance + postWidth + counterDepth
+const counterToGround = 24
 
-scene.add(box);
+const leftSupport = new THREE.Mesh(new THREE.BoxGeometry(twoByFourDepth, supportHeight, supportDepth), woodMaterial)
+leftSupport.position.x = posts[0].position.x + postWidth / 2 + twoByFourDepth / 2;
+leftSupport.position.y = counterToGround - supportHeight / 2;
+leftSupport.position.z = supportDepth / 2;
+scene.add(leftSupport)
 
-box.position.x = 0.5;
-box.rotation.y = 0.5;
+const rightSupport = leftSupport.clone()
+rightSupport.position.x = posts[1].position.x - postWidth / 2 - twoByFourDepth / 2;
+scene.add(rightSupport)
 
-camera.position.x = 5;
-camera.position.y = 5;
-camera.position.z = 5;
+const counterFrameLeft = new THREE.Mesh(new THREE.BoxGeometry(twoByFourDepth, twoByFourHeight, sinkOpeningDepth), woodMaterial)
+counterFrameLeft.position.x = leftSupport.position.x + twoByFourDepth
+counterFrameLeft.position.y = counterToGround - twoByFourHeight / 2
+counterFrameLeft.position.z = posts[2].position.z + postWidth / 2 + sinkOpeningDepth / 2 + twoByFourDepth
+scene.add(counterFrameLeft)
 
+const counterFrameRight = counterFrameLeft.clone()
+counterFrameRight.position.x = rightSupport.position.x - twoByFourDepth
+scene.add(counterFrameRight)
+
+const counterFrameMiddle = counterFrameLeft.clone()
+counterFrameMiddle.position.x = counterFrameRight.position.x - sinkOpeningWidth
+scene.add(counterFrameMiddle)
+
+const counterFrameWidth = postXDistance - 2 * twoByFourDepth - postWidth
+const counterFrameBack = new THREE.Mesh(new THREE.BoxGeometry(counterFrameWidth, twoByFourHeight, twoByFourDepth), woodMaterial)
+counterFrameBack.position.x = (counterFrameLeft.position.x + counterFrameRight.position.x) / 2
+counterFrameBack.position.y = counterFrameLeft.position.y
+counterFrameBack.position.z = posts[2].position.z + postWidth / 2 + twoByFourDepth / 2
+scene.add(counterFrameBack)
+
+const counterFrameFront = counterFrameBack.clone()
+counterFrameFront.position.z += counterDepth - twoByFourDepth
+scene.add(counterFrameFront)
+
+camera.position.set(100, 100, 100)
 camera.lookAt(scene.position);
 
 function animate(): void {
   requestAnimationFrame(animate);
-  render();
-}
-
-function render(): void {
-  const timer = 0.002 * Date.now();
-  box.position.y = 0.5 + 0.5 * Math.sin(timer);
-  box.rotation.x += 0.1;
-  renderer.render(scene, camera);
+  controls.update();
+  renderer.render(scene, camera)
 }
 
 animate();
