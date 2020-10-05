@@ -66,30 +66,53 @@ const rightSupport = leftSupport.clone()
 rightSupport.position.x = posts[1].position.x - postWidth / 2 - twoByFourDepth / 2;
 scene.add(rightSupport)
 
+const counterFrame = new THREE.Group()
+
 const counterFrameLeft = new THREE.Mesh(new THREE.BoxGeometry(twoByFourDepth, twoByFourHeight, sinkOpeningDepth), woodMaterial)
 counterFrameLeft.position.x = leftSupport.position.x + twoByFourDepth
 counterFrameLeft.position.y = counterToGround - twoByFourHeight / 2
 counterFrameLeft.position.z = posts[2].position.z + postWidth / 2 + sinkOpeningDepth / 2 + twoByFourDepth
-scene.add(counterFrameLeft)
+counterFrame.add(counterFrameLeft)
 
 const counterFrameRight = counterFrameLeft.clone()
 counterFrameRight.position.x = rightSupport.position.x - twoByFourDepth
-scene.add(counterFrameRight)
+counterFrame.add(counterFrameRight)
 
 const counterFrameMiddle = counterFrameLeft.clone()
 counterFrameMiddle.position.x = counterFrameRight.position.x - sinkOpeningWidth
-scene.add(counterFrameMiddle)
+counterFrame.add(counterFrameMiddle)
 
 const counterFrameWidth = postXDistance - 2 * twoByFourDepth - postWidth
 const counterFrameBack = new THREE.Mesh(new THREE.BoxGeometry(counterFrameWidth, twoByFourHeight, twoByFourDepth), woodMaterial)
 counterFrameBack.position.x = (counterFrameLeft.position.x + counterFrameRight.position.x) / 2
 counterFrameBack.position.y = counterFrameLeft.position.y
 counterFrameBack.position.z = posts[2].position.z + postWidth / 2 + twoByFourDepth / 2
-scene.add(counterFrameBack)
+counterFrame.add(counterFrameBack)
 
 const counterFrameFront = counterFrameBack.clone()
 counterFrameFront.position.z += counterDepth - twoByFourDepth
-scene.add(counterFrameFront)
+counterFrame.add(counterFrameFront)
+
+scene.add(counterFrame)
+
+const shelfFrame = counterFrame.clone()
+const shelfFrameDrop = 15
+shelfFrame.position.y = counterFrame.position.y - shelfFrameDrop
+scene.add(shelfFrame)
+
+const shelfSupportHeight = shelfFrameDrop + twoByFourHeight
+const shelfSupportWidth = 1.5
+const shelfSupportBL = new THREE.Mesh(new THREE.BoxGeometry(shelfSupportWidth, shelfSupportHeight, shelfSupportWidth), woodMaterial)
+shelfSupportBL.position.x = counterFrameLeft.position.x + twoByFourDepth
+shelfSupportBL.position.y = counterFrameLeft.position.y - shelfFrameDrop / 2
+shelfSupportBL.position.z = counterFrameBack.position.z + twoByFourDepth
+scene.add(shelfSupportBL)
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: new THREE.Color('green'), side: THREE.DoubleSide }))
+ground.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2)
+ground.position.x = postXDistance / 2
+ground.position.z = postZDistance / 2
+scene.add(ground)
 
 camera.position.set(100, 100, 100)
 camera.lookAt(scene.position);
